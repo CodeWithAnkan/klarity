@@ -27,30 +27,21 @@ This project showcases a modern, distributed system architecture, combining a ro
 <img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/ai-chat.png" alt="Klarity Chat" width="800"/>
 </p>
 
-✨ Key Features
-Universal Content Saver: Save any article or YouTube video with a single link.
+# Key Features
 
-Automated AI Pipeline: A multi-stage, resilient pipeline processes all content:
+1. Universal Content Saver: Save any article or YouTube video with a single link.
+2. Automated AI Pipeline: A multi-stage, resilient pipeline processes all content:
+3. Intelligent Scraping: Uses HTML semantics `(<article>, <main>)` to extract clean, relevant text from articles.
+4. Transcription: Automatically transcribes any video using a tiered system:
+5. Fetches existing captions for speed.
+6. Falls back to a AssemblyAI API for English videos without transcripts.
+7. Translation: Intelligently detects the language of any content and translates it to English using a high-quality, reliable translation API.
+8. Summarization: Generates a concise summary for every piece of content using a local Python AI model.
+9. Semantic Search: Go beyond keywords. Search your library by concept or meaning to find the exact information you need, powered by vector embeddings.
+10. "Chat with Your Content" (RAG): Ask questions in natural language and get direct, accurate answers synthesized from your saved documents. This is powered by a full Retrieval-Augmented Generation (RAG) pipeline using the high-speed Groq API.
+11. Spaces: Organize your knowledge into different "Spaces" (e.g., "React Development," "DSA") and chat with an AI that is an expert only on the content within that space.
 
-Intelligent Scraping: Uses HTML semantics (<article>, <main>) to extract clean, relevant text from articles.
-
-Transcription: Automatically transcribes any video using a tiered system:
-
-Fetches existing captions for speed.
-
-Falls back to a self-hosted Whisper AI model for English videos without transcripts.
-
-Translation: Intelligently detects the language of any content and translates it to English using a high-quality, reliable translation API.
-
-Summarization: Generates a concise summary for every piece of content using a local Python AI model.
-
-Semantic Search: Go beyond keywords. Search your library by concept or meaning to find the exact information you need, powered by vector embeddings.
-
-"Chat with Your Content" (RAG): Ask questions in natural language and get direct, accurate answers synthesized from your saved documents. This is powered by a full Retrieval-Augmented Generation (RAG) pipeline using the high-speed Groq API.
-
-Spaces: Organize your knowledge into different "Spaces" (e.g., "React Development," "DSA") and chat with an AI that is an expert only on the content within that space.
-
-🛠️ Tech Stack & Architecture
+# Tech Stack & Architecture
 Klarity is built with a modern, distributed architecture, combining a MERN stack with a suite of local and cloud-based AI services.
 
 graph TD
@@ -78,51 +69,37 @@ graph TD
 
     A --> B
 
-Frontend
+# Frontend
 Framework: React (Vite)
-
 Styling: Tailwind CSS
-
 UI Components: Lucide Icons
 
-Backend
+# Backend
 Runtime: Node.js
-
 Framework: Express.js
-
 Database: MongoDB (with Mongoose)
-
 Authentication: JWT
 
-AI & Data Pipeline
-Transcription: youtube-transcript & local Whisper AI model
-
+# AI & Data Pipeline
+Transcription: youtube-transcript & AssemblyAI API
 Translation: @vitalets/google-translate-api
-
 Summarization: Local Python Flask server running a distilbart model
-
 Embeddings: @xenova/transformers (running locally in Node.js)
-
 Vector Database: Pinecone
-
 Chat Generation (RAG): Groq API (running Llama 3)
 
-⚙️ Local Setup & Installation
+# Local Setup & Installation
 To run this project locally, you'll need Node.js, Python, Docker, and several command-line tools installed.
 
-Prerequisites
+# Prerequisites
 Node.js (v18 or higher)
-
 Python (v3.10 or higher)
-
 Docker Desktop
 
-System Tools:
+# System Tools:
 
 yt-dlp: winget install yt-dlp
-
 ffmpeg: winget install FFmpeg.FFmpeg
-
 git: winget install Git.Git
 
 1. Backend Setup
