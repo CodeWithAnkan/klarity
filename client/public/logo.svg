@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Dark background -->
+    <rect width="512" height="512" rx="96" fill="#111827"/>
+    
+    <!-- Brain outline -->
+    <path d="M256 128C198.6 128 152 174.6 152 232V256C152 282.5 173.5 304 200 304H224V352C224 369.7 238.3 384 256 384C273.7 384 288 369.7 288 352V304H312C338.5 304 360 282.5 360 256V232C360 174.6 313.4 128 256 128Z" stroke="#4B5563" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Glowing accent - a simple circle representing a focused thought or AI node -->
+    <circle cx="256" cy="240" r="32" fill="#34D399"/>
+    <circle cx="256" cy="240" r="48" fill="#34D399" fill-opacity="0.3"/>
+</svg>
