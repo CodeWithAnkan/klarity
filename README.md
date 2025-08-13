@@ -6,6 +6,7 @@
     <img src="https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB" alt="React Badge"/>
     <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js Badge"/>
     <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white" alt="MongoDB Badge"/>
+    <img src="https://img.shields.io/badge/Pinecone-3d82f7?style=flat&logo=pinecone&logoColor=white" alt="Pinecone Badge"/>
     <img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white" alt="Python Badge"/>
     <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker Badge"/>
   </p>
