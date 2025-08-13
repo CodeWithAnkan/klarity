@@ -5,7 +5,7 @@
 <p>
 <img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/react.svg" alt="React Badge"/>
 <img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/node.svg" alt="Node.js Badge"/>
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/MongoDB-4EA94B%3Fstyle%3Dfor-the-badge%26logo%3Dmongodb%26logoColor%3Dwhite" alt="MongoDB Badge"/>
+<img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/mongodb.svg" alt="MongoDB Badge"/>
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython%26logoColor%3Dwhite" alt="Python Badge"/>
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Docker-2496ED%3Fstyle%3Dfor-the-badge%26logo%3Ddocker%26logoColor%3Dwhite" alt="Docker Badge"/>
 </p>
