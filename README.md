@@ -3,7 +3,7 @@
 <h1>Klarity</h1>
 <p><strong>An intelligent knowledge hub that turns your saved articles and videos into a searchable, interactive, and conversational library.</strong></p>
 <p>
-<img src="https://cdn4.iconfinder.com/data/icons/logos-3/200/React.js_logo-1024.png" alt="React Badge"/>
+<img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/react.svg" alt="React Badge"/>
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Node.js-339933%3Fstyle%3Dfor-the-badge%26logo%3Dnodedotjs%26logoColor%3Dwhite" alt="Node.js Badge"/>
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/MongoDB-4EA94B%3Fstyle%3Dfor-the-badge%26logo%3Dmongodb%26logoColor%3Dwhite" alt="MongoDB Badge"/>
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython%26logoColor%3Dwhite" alt="Python Badge"/>
