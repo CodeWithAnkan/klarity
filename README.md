@@ -1,6 +1,6 @@
 <div align="center">
 <img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/logo.svg" alt="Klarity Logo" width="120" />
-<h1>Klarity ✨</h1>
+<h1>Klarity</h1>
 <p><strong>An intelligent knowledge hub that turns your saved articles and videos into a searchable, interactive, and conversational library.</strong></p>
 <p>
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/React-20232A%3Fstyle%3Dfor-the-badge%26logo%3Dreact%26logoColor%3D61DAFB" alt="React Badge"/>
