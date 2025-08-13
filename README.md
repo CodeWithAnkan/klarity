@@ -23,7 +23,7 @@ This project showcases a modern, distributed system architecture, combining a ro
 </p>
 <p align="center">
 <strong>AI Chat Panel</strong><br/>
-<img src="https://www.google.com/search?q=https://raw.githubusercontent.com/CodeWithAnkan/klarity/main/screenshots/chat.png" alt="Klarity Chat" width="800"/>
+<img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/ai-chat.png" alt="Klarity Chat" width="800"/>
 </p>
 
 ✨ Key Features
