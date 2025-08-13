@@ -19,7 +19,7 @@ This project showcases a modern, distributed system architecture, combining a ro
 📸 Screenshots
 <p align="center">
 <strong>Main Dashboard & Content Feed</strong><br/>
-<img src="https://www.google.com/search?q=https://raw.githubusercontent.com/CodeWithAnkan/klarity/main/screenshots/dashboard.png" alt="Klarity Dashboard" width="800"/>
+<img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/dashboard.png" alt="Klarity Dashboard" width="800"/>
 </p>
 <p align="center">
 <strong>AI Chat Panel</strong><br/>
