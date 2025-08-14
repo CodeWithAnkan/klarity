@@ -1,6 +1,6 @@
 <div align="center">
 <img src="https://github.com/CodeWithAnkan/klarity/blob/main/client/public/logo.svg" alt="Klarity Logo" width="120" />
-<h1 href="https://klarity-sigma.vercel.app/">Klarity</h1>
+<a href="https://klarity-sigma.vercel.app/"><strong>Klarity</strong></a>
 <p><strong>An intelligent knowledge hub that turns your saved articles and videos into a searchable, interactive, and conversational library.</strong></p>
 <p>
     <img src="https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB" alt="React Badge"/>
