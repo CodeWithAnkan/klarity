@@ -15,11 +15,11 @@ const app = express()
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:5173', // Your Vite dev server
+  origin: process.env.CORS_ORIGIN, // Use an environment variable
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}))
+}));
 
 // Body parsers
 app.use(express.json())
