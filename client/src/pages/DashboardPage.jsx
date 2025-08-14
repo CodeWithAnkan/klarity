@@ -42,7 +42,7 @@ export default function DashboardPage({ onLogout }) {
 
   const fetchSpaces = useCallback(async () => {
     try {
-      const res = await api.get('/api/spaces');
+      const res = await api.get('/spaces');
       const fetchedSpaces = res.data || [];
       setSpaces(fetchedSpaces);
       if (!activeSpaceId && fetchedSpaces.length > 0) {
@@ -61,7 +61,7 @@ export default function DashboardPage({ onLogout }) {
   const handleDeleteSpace = useCallback(async (spaceId) => {
     if (!spaceId) return;
     try {
-      await api.delete(`/api/spaces/${spaceId}`);
+      await api.delete(`/spaces/${spaceId}`);
       setSpaces(prev => {
         const updatedSpaces = prev.filter(space => space._id !== spaceId);
         if (activeSpaceId === spaceId) {
@@ -97,7 +97,7 @@ export default function DashboardPage({ onLogout }) {
     }));
 
     try {
-      const res = await api.post(`/api/spaces/${activeSpaceId}/chat`, { query });
+      const res = await api.post(`spaces/${activeSpaceId}/chat`, { query });
       const aiMessage = { role: 'assistant', content: res.data.answer };
 
       // Add the AI's response to the state
