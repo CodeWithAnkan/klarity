@@ -2,7 +2,9 @@ import axios from 'axios'
 
 // Create axios instance with default config
 const api = axios.create({
-  // baseURL left empty because Vite dev server proxies /api to backend
+  // Use the environment variable for the deployed URL,
+  // and fall back to the local proxy for development.
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000, // 10 second timeout
   headers: {
     'Content-Type': 'application/json',
@@ -10,18 +12,17 @@ const api = axios.create({
   }
 })
 
-// Request interceptor
+// Request interceptor to add the auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    // Optional: Keep console logs for debugging deployed app
     console.log('API Request:', {
       url: config.url,
       method: config.method,
-      headers: config.headers,
-      data: config.data
     })
     return config
   },
@@ -31,13 +32,12 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor
+// Response interceptor for logging and error handling
 api.interceptors.response.use(
   (response) => {
     console.log('API Response:', {
       url: response.config.url,
       status: response.status,
-      data: response.data
     })
     return response
   },
@@ -50,19 +50,18 @@ api.interceptors.response.use(
     })
     
     if (error.response?.status === 401) {
-      // token invalid/expired
+      // Handle invalid/expired token
       localStorage.removeItem('token')
-      // Redirect to login or show login modal
-      if (window.location.pathname !== '/login') {
+      // Redirect to login, but avoid redirect loops
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         window.location.href = '/login'
       }
     }
     
-    // Handle network errors
     if (!error.response) {
       console.error('Network Error:', error.message)
       return Promise.reject({
-        message: 'Network Error: Please check your internet connection',
+        message: 'Network Error: Could not connect to the server.',
         isNetworkError: true
       })
     }
