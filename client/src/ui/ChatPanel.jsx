@@ -1,24 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import api from '../lib/api'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { Bot, Send, Loader2 } from 'lucide-react'
-
-function pickReply(data) {
-  if (!data) return ''
-  if (typeof data === 'string') return data
-  return (
-    data.reply ||
-    data.answer ||
-    data.message ||
-    data.text ||
-    data.response ||
-    ''
-  )
-}
+import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Bot, Send, Loader2 } from 'lucide-react';
 
 function Message({ role, content }) {
-  const isUser = role === 'user'
+  const isUser = role === 'user';
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
@@ -30,17 +16,9 @@ function Message({ role, content }) {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              pre: ({node, ...props}) => (
-                <pre className="bg-black/60 border border-gray-800 rounded-md p-3 overflow-x-auto" {...props} />
-              ),
-              code: ({inline, className, children, ...props}) => (
-                inline
-                  ? <code className="bg-gray-900/80 px-1 py-0.5 rounded" {...props}>{children}</code>
-                  : <code className={className} {...props}>{children}</code>
-              ),
-              a: ({...props}) => (
-                <a className="text-emerald-400 underline" target="_blank" rel="noreferrer" {...props} />
-              )
+              pre: ({node, ...props}) => <pre className="bg-black/60 border border-gray-800 rounded-md p-3 overflow-x-auto" {...props} />,
+              code: ({inline, className, children, ...props}) => inline ? <code className="bg-gray-900/80 px-1 py-0.5 rounded" {...props}>{children}</code> : <code className={className} {...props}>{children}</code>,
+              a: ({...props}) => <a className="text-emerald-400 underline" target="_blank" rel="noreferrer" {...props} />
             }}
           >
             {content}
@@ -48,51 +26,37 @@ function Message({ role, content }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default function ChatPanel({ activeSpaceId, activeSpaceName }) {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi! Ask me anything about the content in this space.' }
-  ])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const endRef = useRef(null)
+export default function ChatPanel({ activeSpaceId, activeSpaceName, messages, onSendMessage }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef(null);
 
-  const disabled = !activeSpaceId || loading
+  const disabled = !activeSpaceId || loading;
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
+  // Reset input when switching spaces
   useEffect(() => {
-    // Reset chat when switching spaces
-    setMessages([{ role: 'assistant', content: `You're chatting in: ${activeSpaceName || 'Selected Space'}.` }])
-    setInput('')
-  }, [activeSpaceId])
+    setInput('');
+  }, [activeSpaceId]);
 
   const onSubmit = async (e) => {
-    e.preventDefault()
-    if (!input.trim() || !activeSpaceId) return
-    const userMsg = { role: 'user', content: input.trim() }
-    setMessages((prev) => [...prev, userMsg])
-    setInput('')
-    setLoading(true)
-    try {
-      const res = await api.post(`/api/spaces/${activeSpaceId}/chat`, { query: userMsg.content })
-      const replyText = pickReply(res.data)
-      setMessages((prev) => [...prev, { role: 'assistant', content: replyText || '...' }])
-    } catch (err) {
-      const msg = err?.response?.data?.message || err.message || 'Something went wrong'
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${msg}` }])
-    } finally {
-      setLoading(false)
-    }
-  }
+    e.preventDefault();
+    if (!input.trim() || !activeSpaceId) return;
+    
+    setLoading(true);
+    await onSendMessage(input.trim());
+    setInput('');
+    setLoading(false);
+  };
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
       <div className="flex items-center gap-2 px-4 h-12 border-b border-gray-800 bg-gray-900/80">
         <div className="p-1.5 rounded-md bg-emerald-600/20 border border-emerald-600/30">
           <Bot className="w-4 h-4 text-emerald-400" />
@@ -103,7 +67,6 @@ export default function ChatPanel({ activeSpaceId, activeSpaceName }) {
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((m, idx) => (
           <Message key={idx} role={m.role} content={m.content} />
@@ -114,7 +77,6 @@ export default function ChatPanel({ activeSpaceId, activeSpaceName }) {
         <div ref={endRef} />
       </div>
 
-      {/* Input */}
       <form onSubmit={onSubmit} className="p-3 border-t border-gray-800">
         <div className="flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2">
           <input
@@ -136,5 +98,5 @@ export default function ChatPanel({ activeSpaceId, activeSpaceName }) {
         </div>
       </form>
     </div>
-  )
+  );
 }
