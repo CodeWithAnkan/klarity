@@ -1,5 +1,5 @@
-import React from 'react'
-import { ExternalLink, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import React, { useState } from 'react'
+import { ExternalLink, Trash2, Loader2, AlertTriangle, X, Info } from 'lucide-react'
 
 function StatusDot({ status }) {
   const color = status === 'processed' ? 'bg-emerald-500' : status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
@@ -14,10 +14,14 @@ function StatusDot({ status }) {
 
 export default function ContentCard({ item, onDelete, isDeleting = false }) {
   const title = item?.title || (item?.url ? new URL(item.url).hostname : 'Untitled')
-  const summary = item?.summary || 'No summary available yet.'
+  const summary = item?.summary
   const url = item?.url || item?.sourceUrl
   const created = item?.createdAt ? new Date(item.createdAt).toLocaleString() : ''
   const hasFailed = item?.status === 'failed';
+  const isProcessedWithoutSummary = item?.status === 'processed' && !summary;
+
+  // --- NEW: State to control the visibility of the summary notice ---
+  const [showSummaryNotice, setShowSummaryNotice] = useState(true);
 
   return (
     <div className={`bg-gray-800/50 border rounded-lg p-4 hover:border-gray-700 transition ${hasFailed ? 'border-red-500/30' : 'border-gray-800'}`}>
@@ -61,16 +65,24 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
         </div>
       </div>
       
-      {/* --- THIS IS THE NEW LOGIC --- */}
       {hasFailed && item.failureReason ? (
         <div className="mt-3 text-sm text-red-400 bg-red-500/10 p-3 rounded-md flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{item.failureReason}</span>
         </div>
+      // --- NEW: Dismissible banner for missing summaries ---
+      ) : isProcessedWithoutSummary && showSummaryNotice ? (
+        <div className="mt-3 text-sm text-blue-300 bg-blue-500/10 p-3 rounded-md flex items-start gap-2">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span className="flex-1">The summarization feature is currently disabled in this deployment.</span>
+            <button onClick={() => setShowSummaryNotice(false)} className="p-1 -m-1">
+                <X className="w-4 h-4" />
+            </button>
+        </div>
       ) : (
-        <p className="text-sm text-gray-300 mt-3 whitespace-pre-line">{summary}</p>
+        // Only show the summary if it exists
+        summary && <p className="text-sm text-gray-300 mt-3 whitespace-pre-line">{summary}</p>
       )}
-      {/* --- END OF NEW LOGIC --- */}
 
       {created && <div className="mt-3 text-[11px] text-gray-400">Added {created}</div>}
     </div>

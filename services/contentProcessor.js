@@ -136,9 +136,13 @@ const processContent = async (contentId) => {
         }
 
         // Summarization
-        if (extractedText && extractedText.length > 200) {
+        if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
+            console.log('Sending text to local summarization server...');
             const summaryResponse = await axios.post(LOCAL_SUMMARIZATION_API_URL, { text: extractedText });
             finalSummary = summaryResponse.data.summary_text;
+            console.log('Summary generated successfully.');
+        } else {
+            console.log('Summarization is disabled, skipping.');
         }
 
         // Final Save to MongoDB
