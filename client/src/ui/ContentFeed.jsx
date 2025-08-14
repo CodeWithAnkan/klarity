@@ -16,7 +16,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
     setLoading(true)
     setError('')
     try {
-      const res = await api.get(`/api/spaces/${spaceId}/content`)
+      const res = await api.get(`/spaces/${spaceId}/content`)
       setItems(res.data || [])
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Failed to load content')
@@ -35,7 +35,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
     
     setDeletingId(contentId)
     try {
-      await api.delete(`/api/content/${contentId}`)
+      await api.delete(`/content/${contentId}`)
       // Remove the deleted item from the UI
       setItems(prev => prev.filter(item => item._id !== contentId))
     } catch (err) {
@@ -53,7 +53,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
     if (!trimmed) return
     setSubmitting(true)
     try {
-      const res = await api.post('/api/content', { url: trimmed, spaceId: activeSpaceId })
+      const res = await api.post('/content', { url: trimmed, spaceId: activeSpaceId })
       const created = res.data
       // Prepend for quick feedback
       setItems((prev) => [created, ...prev])

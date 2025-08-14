@@ -18,7 +18,7 @@ export default function SpacesSidebar({ onSelectSpace, activeSpaceId, onDeleteSp
     setError('')
     try {
       console.log('Fetching spaces...')
-      const res = await api.get('/api/spaces')
+      const res = await api.get('/spaces')
       console.log('Spaces loaded:', res.data)
       onSpacesChange?.(res.data || [])
     } catch (err) {
@@ -43,7 +43,7 @@ export default function SpacesSidebar({ onSelectSpace, activeSpaceId, onDeleteSp
     if (!newName.trim()) return
     setCreatingLoading(true)
     try {
-      const res = await api.post('/api/spaces', { name: newName.trim() })
+      const res = await api.post('/spaces', { name: newName.trim() })
       const created = res.data
       onSpacesChange?.([created, ...spaces])
       setNewName('')

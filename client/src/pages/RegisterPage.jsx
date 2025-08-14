@@ -14,7 +14,7 @@ export default function RegisterPage({ onSwitchToLogin, onAuthed }) {
     setLoading(true)
     setError('')
     try {
-      const res = await api.post('/api/users', { name, email, password })
+      const res = await api.post('/users', { name, email, password })
       const token = res?.data?.token
       if (!token) throw new Error('No token returned')
       localStorage.setItem('token', token)
