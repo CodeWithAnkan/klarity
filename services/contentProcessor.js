@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const execPromise = util.promisify(exec);
 
 const axios = require('axios');
@@ -54,12 +54,40 @@ const processContent = async (contentId) => {
             } catch (transcriptError) {
                 console.log(`Tier 1 failed: ${transcriptError.message}. Falling back to AssemblyAI...`);
                 
+                // --- NEW: Duration Check ---
+                console.log('Checking video duration before download...');
+                const metadataCommand = `yt-dlp --get-duration "${url}"`;
+                const { stdout } = await execPromise(metadataCommand);
+                const durationParts = stdout.trim().split(':');
+                let durationInSeconds = 0;
+                if (durationParts.length === 3) { // HH:MM:SS
+                    durationInSeconds = parseInt(durationParts[0]) * 3600 + parseInt(durationParts[1]) * 60 + parseInt(durationParts[2]);
+                } else if (durationParts.length === 2) { // MM:SS
+                    durationInSeconds = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
+                }
+                
+                const MAX_DURATION_SECONDS = 10 * 60 * 60; // 10 hours
+                if (durationInSeconds > MAX_DURATION_SECONDS) {
+                    throw new Error(`Video is too long (${Math.round(durationInSeconds / 3600)} hours). Maximum supported duration is 10 hours.`);
+                }
+                console.log(`Video duration (${Math.round(durationInSeconds / 60)} mins) is within limits. Proceeding.`);
+                // --- END OF NEW LOGIC ---
+
                 const tempAudioFilename = `temp_audio_${contentId}.mp3`;
                 tempAudioPath = path.join(__dirname, tempAudioFilename);
 
-                const downloadCommand = `yt-dlp -x --audio-format mp3 -o "${tempAudioPath}" "${url}"`;
-                await execPromise(downloadCommand);
-                console.log('Audio downloaded successfully via yt-dlp.');
+                console.log('Downloading audio with yt-dlp...');
+                await new Promise((resolve, reject) => {
+                    const downloadProcess = spawn('yt-dlp', [ '-x', '--audio-format', 'mp3', '-o', tempAudioPath, url ]);
+                    downloadProcess.on('close', (code) => {
+                        if (code === 0) {
+                            console.log('Audio downloaded successfully via yt-dlp.');
+                            resolve();
+                        } else {
+                            reject(new Error(`yt-dlp process exited with code ${code}`));
+                        }
+                    });
+                });
 
                 const assemblyClient = new AssemblyAI({ apiKey: ASSEMBLYAI_API_KEY });
                 const transcript = await assemblyClient.transcripts.transcribe({
@@ -126,7 +154,7 @@ const processContent = async (contentId) => {
             console.log('Starting indexing for semantic search in Pinecone...');
             
             const extractor = await PipelineSingleton.getInstance();
-            const index = pinecone.index('klarity'); // Assumes an index named 'klarity'
+            const index = pinecone.index('klarity');
 
             const words = extractedText.split(' ');
             const chunkSize = 150;

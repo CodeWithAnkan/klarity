@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExternalLink, Trash2, Loader2 } from 'lucide-react'
+import { ExternalLink, Trash2, Loader2, AlertTriangle } from 'lucide-react'
 
 function StatusDot({ status }) {
   const color = status === 'processed' ? 'bg-emerald-500' : status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
@@ -17,13 +17,13 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
   const summary = item?.summary || 'No summary available yet.'
   const url = item?.url || item?.sourceUrl
   const created = item?.createdAt ? new Date(item.createdAt).toLocaleString() : ''
-  
+  const hasFailed = item?.status === 'failed';
+
   return (
-    <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition">
+    <div className={`bg-gray-800/50 border rounded-lg p-4 hover:border-gray-700 transition ${hasFailed ? 'border-red-500/30' : 'border-gray-800'}`}>
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            {/* --- FIX 1: Added min-w-0 to this container --- */}
             <div className="flex-1 flex items-center gap-2 min-w-0">
               <h3 className="font-medium text-gray-100 truncate">{title}</h3>
               <StatusDot status={item?.status} />
@@ -48,7 +48,6 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
           </div>
 
           {url && (
-            /* --- FIX 2: Changed to flex and ensured it doesn't grow --- */
             <a 
               href={url} 
               target="_blank" 
@@ -61,7 +60,18 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
           )}
         </div>
       </div>
-      <p className="text-sm text-gray-300 mt-3 whitespace-pre-line">{summary}</p>
+      
+      {/* --- THIS IS THE NEW LOGIC --- */}
+      {hasFailed && item.failureReason ? (
+        <div className="mt-3 text-sm text-red-400 bg-red-500/10 p-3 rounded-md flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{item.failureReason}</span>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-300 mt-3 whitespace-pre-line">{summary}</p>
+      )}
+      {/* --- END OF NEW LOGIC --- */}
+
       {created && <div className="mt-3 text-[11px] text-gray-400">Added {created}</div>}
     </div>
   )
