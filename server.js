@@ -13,15 +13,21 @@ connectDB();
 
 const app = express();
 
-// --- THIS IS THE FIX ---
-// Enable CORS before parsing the body. This is the correct order.
+// Enable CORS
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-// --- END OF FIX ---
+
+// --- THIS IS THE NEW DEBUGGING STEP ---
+// Add a middleware to log all incoming requests
+app.use((req, res, next) => {
+  console.log(`Incoming Request: ${req.method} ${req.path}`);
+  next();
+});
+// --- END OF DEBUGGING STEP ---
 
 // Body parsers
 app.use(express.json());
