@@ -45,6 +45,7 @@ This project showcases a modern, distributed system architecture, combining a ro
 Klarity is built with a modern, distributed architecture, combining a MERN stack with a suite of local and cloud-based AI services.
 
 graph TD
+    
     subgraph Frontend
         A[React App on Vercel]
     end
@@ -63,7 +64,7 @@ graph TD
         F -- Translates --> I[Google Translate API]
         F -- Summarizes --> J[Local Python Summarizer]
         H -- Tier 1 --> K[youtube-transcript]
-        H -- Tier 2 Fallback --> L[Local Whisper AI]
+        H -- Tier 2 Fallback --> L[AssemblyAI API]
         J -- Runs on --> M[Local Python Server]
     end
 
