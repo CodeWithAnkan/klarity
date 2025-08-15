@@ -15,7 +15,7 @@ const Content = require('../models/contentModel');
 const pinecone = require('../config/pinecone');
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
-const LOCAL_SUMMARIZATION_API_URL = 'http://localhost:5002/summarize';
+const LOCAL_SUMMARIZATION_API_URL = 'https://klarity-summarizer-production.up.railway.app/summarize';
 
 class PipelineSingleton {
     static instance = null;
