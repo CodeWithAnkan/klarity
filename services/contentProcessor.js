@@ -137,11 +137,12 @@ const processContent = async (contentId) => {
         // Summarization with Replicate
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
             console.log('Sending text to Replicate for summarization...');
+            const safeText = extractedText.substring(0, 4000);
             const startResponse = await axios.post(
                 'https://api.replicate.com/v1/predictions',
                 {
                     version: "4b7ff053cda122aeb4f9b8c83c50a3111b4c6837947721832041d8b2d1314f17",
-                    input: { text: extractedText }
+                    input: { text: safeText }
                 },
                 { headers: { 'Authorization': `Token ${REPLICATE_API_TOKEN}` } }
             );
