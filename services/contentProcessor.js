@@ -45,6 +45,15 @@ const processContent = async (contentId) => {
         // --- Step 1: Text Extraction ---
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             console.log('Processing YouTube URL...');
+            
+            try {
+                const info = await axios.get(`https://www.youtube.com/oembed?url=${url}&format=json`);
+                extractedTitle = info.data.title;
+            } catch {
+                console.warn('Could not fetch YouTube title via oembed.');
+                extractedTitle = 'YouTube Video';
+            }
+
             try {
                 const transcript = await YoutubeTranscript.fetchTranscript(url);
                 extractedText = transcript.map((line) => line.text).join(' ').trim();
