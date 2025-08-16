@@ -15,7 +15,7 @@ const Content = require('../models/contentModel');
 const pinecone = require('../config/pinecone');
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
-const LOCAL_SUMMARIZATION_API_URL = 'https://klarity-summarizer-production.up.railway.app/summarize';
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
 class PipelineSingleton {
     static instance = null;
@@ -27,6 +27,24 @@ class PipelineSingleton {
         return this.instance;
     }
 }
+
+// Helper function to poll Replicate for results
+const pollReplicate = async (predictionUrl) => {
+    for (let i = 0; i < 60; i++) { // Poll for up to 2 minutes
+        const response = await axios.get(predictionUrl, {
+            headers: { 'Authorization': `Token ${REPLICATE_API_TOKEN}` }
+        });
+        const { status, output } = response.data;
+        if (status === 'succeeded') {
+            return output.join("");
+        }
+        if (status === 'failed' || status === 'canceled') {
+            throw new Error('Replicate summarization failed.');
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+    }
+    throw new Error('Replicate summarization timed out.');
+};
 
 const processContent = async (contentId) => {
     console.log(`Starting processing for content ID: ${contentId}`);
@@ -54,25 +72,6 @@ const processContent = async (contentId) => {
             } catch (transcriptError) {
                 console.log(`Tier 1 failed: ${transcriptError.message}. Falling back to AssemblyAI...`);
                 
-                // --- NEW: Duration Check ---
-                console.log('Checking video duration before download...');
-                const metadataCommand = `yt-dlp --get-duration "${url}"`;
-                const { stdout } = await execPromise(metadataCommand);
-                const durationParts = stdout.trim().split(':');
-                let durationInSeconds = 0;
-                if (durationParts.length === 3) { // HH:MM:SS
-                    durationInSeconds = parseInt(durationParts[0]) * 3600 + parseInt(durationParts[1]) * 60 + parseInt(durationParts[2]);
-                } else if (durationParts.length === 2) { // MM:SS
-                    durationInSeconds = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
-                }
-                
-                const MAX_DURATION_SECONDS = 10 * 60 * 60; // 10 hours
-                if (durationInSeconds > MAX_DURATION_SECONDS) {
-                    throw new Error(`Video is too long (${Math.round(durationInSeconds / 3600)} hours). Maximum supported duration is 10 hours.`);
-                }
-                console.log(`Video duration (${Math.round(durationInSeconds / 60)} mins) is within limits. Proceeding.`);
-                // --- END OF NEW LOGIC ---
-
                 const tempAudioFilename = `temp_audio_${contentId}.mp3`;
                 tempAudioPath = path.join(__dirname, tempAudioFilename);
 
@@ -135,14 +134,23 @@ const processContent = async (contentId) => {
             } catch { extractedTitle = 'YouTube Video'; }
         }
 
-        // Summarization
+        // Summarization with Replicate
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
-            console.log('Sending text to local summarization server...');
-            const summaryResponse = await axios.post(LOCAL_SUMMARIZATION_API_URL, { text: extractedText });
-            finalSummary = summaryResponse.data.summary_text;
-            console.log('Summary generated successfully.');
+            console.log('Sending text to Replicate for summarization...');
+            const startResponse = await axios.post(
+                'https://api.replicate.com/v1/predictions',
+                {
+                    version: "4b7ff053cda122aeb4f9b8c83c50a3111b4c6837947721832041d8b2d1314f17",
+                    input: { text: extractedText }
+                },
+                { headers: { 'Authorization': `Token ${REPLICATE_API_TOKEN}` } }
+            );
+
+            const predictionUrl = startResponse.data.urls.get;
+            finalSummary = await pollReplicate(predictionUrl);
+            console.log('Summary generated successfully by Replicate.');
         } else {
-            console.log('Summarization is disabled, skipping.');
+            console.log('Summarization is disabled or text is too short, skipping.');
         }
 
         // Final Save to MongoDB
