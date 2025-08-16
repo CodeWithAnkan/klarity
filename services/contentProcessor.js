@@ -15,7 +15,7 @@ const Content = require('../models/contentModel');
 const pinecone = require('../config/pinecone');
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
-const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 class PipelineSingleton {
     static instance = null;
@@ -27,24 +27,6 @@ class PipelineSingleton {
         return this.instance;
     }
 }
-
-// Helper function to poll Replicate for results
-const pollReplicate = async (predictionUrl) => {
-    for (let i = 0; i < 60; i++) { // Poll for up to 2 minutes
-        const response = await axios.get(predictionUrl, {
-            headers: { 'Authorization': `Token ${REPLICATE_API_TOKEN}` }
-        });
-        const { status, output } = response.data;
-        if (status === 'succeeded') {
-            return output.join("");
-        }
-        if (status === 'failed' || status === 'canceled') {
-            throw new Error('Replicate summarization failed.');
-        }
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-    }
-    throw new Error('Replicate summarization timed out.');
-};
 
 const processContent = async (contentId) => {
     console.log(`Starting processing for content ID: ${contentId}`);
@@ -60,6 +42,7 @@ const processContent = async (contentId) => {
         let finalSummary = '';
         let isEnglish = true;
 
+        // --- Step 1: Text Extraction ---
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             console.log('Processing YouTube URL...');
             try {
@@ -75,18 +58,9 @@ const processContent = async (contentId) => {
                 const tempAudioFilename = `temp_audio_${contentId}.mp3`;
                 tempAudioPath = path.join(__dirname, tempAudioFilename);
 
-                console.log('Downloading audio with yt-dlp...');
-                await new Promise((resolve, reject) => {
-                    const downloadProcess = spawn('yt-dlp', [ '-x', '--audio-format', 'mp3', '-o', tempAudioPath, url ]);
-                    downloadProcess.on('close', (code) => {
-                        if (code === 0) {
-                            console.log('Audio downloaded successfully via yt-dlp.');
-                            resolve();
-                        } else {
-                            reject(new Error(`yt-dlp process exited with code ${code}`));
-                        }
-                    });
-                });
+                const downloadCommand = `yt-dlp -x --audio-format mp3 -o "${tempAudioPath}" "${url}"`;
+                await execPromise(downloadCommand);
+                console.log('Audio downloaded successfully via yt-dlp.');
 
                 const assemblyClient = new AssemblyAI({ apiKey: ASSEMBLYAI_API_KEY });
                 const transcript = await assemblyClient.transcripts.transcribe({
@@ -115,7 +89,7 @@ const processContent = async (contentId) => {
             extractedText = articleBody.text().replace(/\s\s+/g, ' ').trim();
         }
 
-        // Language Detection & Translation
+        // --- Step 2: Translation ---
         if (extractedText && extractedText.length > 10) {
             const langCode = franc(extractedText.substring(0, 1000));
             isEnglish = (langCode === 'eng');
@@ -123,38 +97,33 @@ const processContent = async (contentId) => {
                 console.log(`Language detected: ${langCode}. Translating...`);
                 const { text } = await translate(extractedText, { to: 'en' });
                 extractedText = text;
+            } else {
+                console.log('Text is already in English.');
             }
         }
 
-        // Get YouTube Title
-        if (url.includes('youtube.com') && !extractedTitle) {
-            try {
-                const info = await axios.get(`https://www.youtube.com/oembed?url=${url}&format=json`);
-                extractedTitle = info.data.title;
-            } catch { extractedTitle = 'YouTube Video'; }
-        }
-
-        // Summarization with Replicate
+        // --- Step 3: Summarization with Groq ---
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
-            console.log('Sending text to Replicate for summarization...');
-            const safeText = extractedText.substring(0, 4000);
-            const startResponse = await axios.post(
-                'https://api.replicate.com/v1/predictions',
-                {
-                    version: "4b7ff053cda122aeb4f9b8c83c50a3111b4c6837947721832041d8b2d1314f17",
-                    input: { text: safeText }
-                },
-                { headers: { 'Authorization': `Token ${REPLICATE_API_TOKEN}` } }
-            );
+            console.log('Sending text to Groq for summarization...');
+            
+            const systemPrompt = `You are an expert summarizer. Create a concise, easy-to-read summary of the following text. The summary should be about 3-4 sentences long.\n\nText:\n${extractedText}`;
 
-            const predictionUrl = startResponse.data.urls.get;
-            finalSummary = await pollReplicate(predictionUrl);
-            console.log('Summary generated successfully by Replicate.');
+            const groqResponse = await axios.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                {
+                    messages: [{ role: "system", content: systemPrompt }],
+                    model: "llama3-8b-8192"
+                },
+                { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } }
+            );
+            
+            finalSummary = groqResponse.data.choices[0].message.content;
+            console.log('Summary generated successfully by Groq.');
         } else {
             console.log('Summarization is disabled or text is too short, skipping.');
         }
 
-        // Final Save to MongoDB
+        // --- Step 4: Final Save & Indexing ---
         content.title = extractedTitle;
         content.text = extractedText;
         content.summary = finalSummary;
