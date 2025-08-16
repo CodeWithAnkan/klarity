@@ -42,7 +42,6 @@ const processContent = async (contentId) => {
         let finalSummary = '';
         let isEnglish = true;
 
-        // --- Step 1: Text Extraction ---
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             console.log('Processing YouTube URL...');
             
@@ -67,9 +66,18 @@ const processContent = async (contentId) => {
                 const tempAudioFilename = `temp_audio_${contentId}.mp3`;
                 tempAudioPath = path.join(__dirname, tempAudioFilename);
 
-                const downloadCommand = `yt-dlp -x --audio-format mp3 -o "${tempAudioPath}" "${url}"`;
-                await execPromise(downloadCommand);
-                console.log('Audio downloaded successfully via yt-dlp.');
+                try {
+                    const downloadCommand = `yt-dlp -x --audio-format mp3 -o "${tempAudioPath}" "${url}"`;
+                    await execPromise(downloadCommand);
+                    console.log('Audio downloaded successfully via yt-dlp.');
+                } catch (downloadError) {
+                    // --- THIS IS THE FIX: Catch the specific anti-bot error ---
+                    if (downloadError.stderr && downloadError.stderr.includes('Sign in to confirm')) {
+                        throw new Error("YouTube Transcription is down due to YouTube's aggressive anti-bots blocking. Please check back later.");
+                    }
+                    // For any other download error, re-throw it
+                    throw downloadError;
+                }
 
                 const assemblyClient = new AssemblyAI({ apiKey: ASSEMBLYAI_API_KEY });
                 const transcript = await assemblyClient.transcripts.transcribe({
@@ -114,7 +122,7 @@ const processContent = async (contentId) => {
         // --- Step 3: Summarization with Groq ---
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
             console.log('Sending text to Groq for summarization...');
-            const safeText = extractedText.substring(0, 4000);
+            const safeText = extractedText.substring(0, 7000); // Truncate for safety
             
             const systemPrompt = `You are an expert summarizer. Create a concise, easy-to-read summary of the following text. The summary should be about 3-4 sentences long.\n\nText:\n${safeText}`;
 
