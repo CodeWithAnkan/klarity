@@ -114,8 +114,9 @@ const processContent = async (contentId) => {
         // --- Step 3: Summarization with Groq ---
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
             console.log('Sending text to Groq for summarization...');
+            const safeText = extractedText.substring(0, 4000);
             
-            const systemPrompt = `You are an expert summarizer. Create a concise, easy-to-read summary of the following text. The summary should be about 3-4 sentences long.\n\nText:\n${extractedText}`;
+            const systemPrompt = `You are an expert summarizer. Create a concise, easy-to-read summary of the following text. The summary should be about 3-4 sentences long.\n\nText:\n${safeText}`;
 
             const groqResponse = await axios.post(
                 'https://api.groq.com/openai/v1/chat/completions',
