@@ -33,7 +33,7 @@ export default function AboutModal({ onClose }) {
           </p>
           <ul>
             <li>
-              <strong>Our Solution:</strong> Unfortunatly we do not have a solution for this problem. We are working on it. Your help is appreciated.
+              <strong>Our Solution:</strong> Unfortunately, we do not have a solution for this problem. We are working on it. Your help is appreciated.
             </li>
             <li>
               <strong>The Trade-off:</strong> We cannot currently process videos that do not have a transcript, as the download would be blocked. The app will gracefully fail and inform you if a transcript is unavailable.
