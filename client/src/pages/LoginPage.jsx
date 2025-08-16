@@ -17,7 +17,7 @@ export default function LoginPage({ onSwitchToRegister, onAuthed }) {
       const token = res?.data?.token
       if (!token) throw new Error('No token returned')
       localStorage.setItem('token', token)
-      onAuthed?.()
+      onAuthed?.(res.data)
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Login failed')
     } finally {

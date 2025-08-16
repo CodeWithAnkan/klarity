@@ -4,17 +4,36 @@ import RegisterPage from './pages/RegisterPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 
 export default function App() {
-  const [view, setView] = useState('login') // 'login' | 'register' | 'dashboard'
+  const [view, setView] = useState('login');
+  const [user, setUser] = useState(null);
 
-  // On load, if token exists, go to dashboard
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) setView('dashboard')
-  }, [])
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    if (token && savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+        setView('dashboard');
+      } catch (error) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setView('login');
+      }
+    }
+  }, []);
 
-  const handleAuthed = useCallback(() => {
-    setView('dashboard')
-  }, [])
+  const handleAuthed = useCallback((userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    setView('dashboard');
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setView('login');
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -25,7 +44,7 @@ export default function App() {
         <RegisterPage onSwitchToLogin={() => setView('login')} onAuthed={handleAuthed} />
       )}
       {view === 'dashboard' && (
-        <DashboardPage onLogout={() => { localStorage.removeItem('token'); setView('login') }} />
+        <DashboardPage user={user} onLogout={handleLogout} />
       )}
     </div>
   )
