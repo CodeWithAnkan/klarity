@@ -27,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
     "youtube-transcript": "^1.2.1",
+    "yt-transcript": "^0.0.2",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {

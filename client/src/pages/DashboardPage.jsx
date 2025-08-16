@@ -3,8 +3,9 @@ import api from '../lib/api.js';
 import SpacesSidebar from '../ui/SpacesSidebar.jsx';
 import ContentFeed from '../ui/ContentFeed.jsx';
 import ChatPanel from '../ui/ChatPanel.jsx';
-import { LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Info } from 'lucide-react';
 import Footer from '../components/Footer';
+import AboutModal from '../ui/AboutModal.jsx'; // <-- 1. Import the new modal component
 
 // Accept the 'user' prop from App.jsx
 export default function DashboardPage({ user, onLogout }) {
@@ -14,11 +15,11 @@ export default function DashboardPage({ user, onLogout }) {
   const [spaces, setSpaces] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [allMessages, setAllMessages] = useState({});
-  
-  // --- NEW: State for the user dropdown menu ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // --- NEW: State for the About Modal ---
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
-  // Helper function to get initials from a name for the avatar
   const getInitials = (name) => {
     if (!name) return '';
     const names = name.split(' ');
@@ -27,7 +28,6 @@ export default function DashboardPage({ user, onLogout }) {
     }
     return name.substring(0, 2).toUpperCase();
   };
-
 
   // Load chat history from localStorage
   useEffect(() => {
@@ -105,7 +105,6 @@ export default function DashboardPage({ user, onLogout }) {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* --- THIS IS THE FIX: Increased z-index to z-50 --- */}
       <header className="relative z-50 flex items-center justify-between px-4 h-14 border-b border-gray-800 bg-gray-900/80 flex-shrink-0">
         <div className="flex items-center gap-4">
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 hover:text-white">
@@ -117,6 +116,17 @@ export default function DashboardPage({ user, onLogout }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsAboutModalOpen(true)} 
+            className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white"
+            title="About Klarity & Contributions"
+          >
+            <Info className="w-4 h-4" />
+            {/* --- THIS IS THE FIX --- */}
+            <span className="hidden sm:inline">About</span>
+            {/* --- END OF FIX --- */}
+          </button>
+
           <button 
             onClick={() => setShowChat(!showChat)} 
             className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white"
@@ -183,6 +193,8 @@ export default function DashboardPage({ user, onLogout }) {
         )}
       </div>
       <Footer />
+
+      {isAboutModalOpen && <AboutModal onClose={() => setIsAboutModalOpen(false)} />}
     </div>
   )
 }
