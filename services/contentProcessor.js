@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-// We no longer need child_process
-// const { exec, spawn } = require('child_process');
-// const execPromise = util.promisify(exec);
+const { exec, spawn } = require('child_process');
+const execPromise = util.promisify(exec);
 
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -31,8 +30,7 @@ class PipelineSingleton {
 
 const processContent = async (contentId) => {
     console.log(`Starting processing for content ID: ${contentId}`);
-    // No longer need tempAudioPath
-    // let tempAudioPath = null; 
+    let tempAudioPath = null;
 
     try {
         const content = await Content.findById(contentId);
@@ -44,8 +42,18 @@ const processContent = async (contentId) => {
         let finalSummary = '';
         let isEnglish = true;
 
+        // --- Step 1: Text Extraction ---
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             console.log('Processing YouTube URL...');
+            
+            try {
+                const info = await axios.get(`https://www.youtube.com/oembed?url=${url}&format=json`);
+                extractedTitle = info.data.title;
+            } catch {
+                console.warn('Could not fetch YouTube title via oembed.');
+                extractedTitle = 'YouTube Video';
+            }
+
             try {
                 const transcript = await YoutubeTranscript.fetchTranscript(url);
                 extractedText = transcript.map((line) => line.text).join(' ').trim();
@@ -56,10 +64,16 @@ const processContent = async (contentId) => {
             } catch (transcriptError) {
                 console.log(`Tier 1 failed: ${transcriptError.message}. Falling back to AssemblyAI...`);
                 
-                // --- THIS IS THE FIX: Pass URL directly to AssemblyAI ---
+                const tempAudioFilename = `temp_audio_${contentId}.mp3`;
+                tempAudioPath = path.join(__dirname, tempAudioFilename);
+
+                const downloadCommand = `yt-dlp -x --audio-format mp3 -o "${tempAudioPath}" "${url}"`;
+                await execPromise(downloadCommand);
+                console.log('Audio downloaded successfully via yt-dlp.');
+
                 const assemblyClient = new AssemblyAI({ apiKey: ASSEMBLYAI_API_KEY });
                 const transcript = await assemblyClient.transcripts.transcribe({
-                    audio: url, // Pass the youtube URL directly
+                    audio: tempAudioPath,
                 });
 
                 if (transcript.status === 'error') {
@@ -67,7 +81,6 @@ const processContent = async (contentId) => {
                 }
                 extractedText = transcript.text;
                 console.log('Successfully transcribed audio using AssemblyAI.');
-                // --- END OF FIX ---
             }
         } else {
             // Article Workflow
@@ -85,7 +98,7 @@ const processContent = async (contentId) => {
             extractedText = articleBody.text().replace(/\s\s+/g, ' ').trim();
         }
 
-        // Language Detection & Translation
+        // --- Step 2: Translation ---
         if (extractedText && extractedText.length > 10) {
             const langCode = franc(extractedText.substring(0, 1000));
             isEnglish = (langCode === 'eng');
@@ -98,15 +111,7 @@ const processContent = async (contentId) => {
             }
         }
 
-        // Get YouTube Title
-        if (url.includes('youtube.com') && !extractedTitle) {
-            try {
-                const info = await axios.get(`https://www.youtube.com/oembed?url=${url}&format=json`);
-                extractedTitle = info.data.title;
-            } catch { extractedTitle = 'YouTube Video'; }
-        }
-
-        // Summarization with Groq
+        // --- Step 3: Summarization with Groq ---
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
             console.log('Sending text to Groq for summarization...');
             
@@ -127,7 +132,7 @@ const processContent = async (contentId) => {
             console.log('Summarization is disabled or text is too short, skipping.');
         }
 
-        // Final Save & Indexing
+        // --- Step 4: Final Save & Indexing ---
         content.title = extractedTitle;
         content.text = extractedText;
         content.summary = finalSummary;
@@ -177,7 +182,12 @@ const processContent = async (contentId) => {
             content.failureReason = error.message;
             await content.save();
         }
-    } 
+    } finally {
+        if (tempAudioPath && fs.existsSync(tempAudioPath)) {
+            fs.unlinkSync(tempAudioPath);
+            console.log('Temporary audio file deleted.');
+        }
+    }
 };
 
 module.exports = { processContent, PipelineSingleton };
