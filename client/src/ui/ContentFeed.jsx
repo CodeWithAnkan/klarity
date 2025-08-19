@@ -30,7 +30,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
     try {
       const res = await api.get(`/spaces/${spaceId}/content`)
       setItems(res.data || [])
-    } catch (err) { // <-- This is where the fix is
+    } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Failed to load content')
     } finally {
       setLoading(false)
@@ -76,6 +76,9 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(percentCompleted);
           },
+          // --- THIS IS THE FIX: Increased timeout for file uploads ---
+          timeout: 60000, // 60 seconds
+          // --- END OF FIX ---
         });
         setFile(null);
       } else {
@@ -145,15 +148,6 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
                 maxLength={2048} 
               />
             </div>
-
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange}
-                accept=".pdf"
-                className="hidden" 
-                disabled={submitting}
-            />
             <button 
                 type="button" 
                 onClick={() => fileInputRef.current.click()}
@@ -163,7 +157,6 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             >
                 <UploadCloud className="w-4 h-4" />
             </button>
-            
             <button
               type="button"
               onClick={() => fetchContent(activeSpaceId)}
@@ -173,7 +166,6 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            
             <button
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg px-3 py-2 disabled:opacity-60"
               disabled={submitting || (!url.trim() && !file)}
