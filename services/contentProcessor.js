@@ -10,6 +10,7 @@ const { YoutubeTranscript } = require('youtube-transcript');
 const { franc } = require('franc');
 const { translate } = require('@vitalets/google-translate-api');
 const { AssemblyAI } = require('assemblyai');
+const pdf = require('pdf-parse'); // <-- 1. Import the PDF parsing library
 
 const Content = require('../models/contentModel');
 const pinecone = require('../config/pinecone');
@@ -28,7 +29,8 @@ class PipelineSingleton {
     }
 }
 
-const processContent = async (contentId) => {
+// 2. Update the function to accept an optional file path
+const processContent = async (contentId, filePath = null) => {
     console.log(`Starting processing for content ID: ${contentId}`);
     let tempAudioPath = null;
 
@@ -42,7 +44,21 @@ const processContent = async (contentId) => {
         let finalSummary = '';
         let isEnglish = true;
 
-        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        // --- 3. NEW: PDF Processing Logic ---
+        if (filePath) {
+            console.log('Processing PDF file...');
+            const dataBuffer = fs.readFileSync(filePath);
+            const data = await pdf(dataBuffer);
+            extractedText = data.text;
+            // Use the original filename (stored in the url field) as the title
+            extractedTitle = path.basename(content.url, path.extname(content.url)); 
+            
+            // Clean up the temporary file from the 'uploads' directory
+            fs.unlinkSync(filePath);
+            console.log('Successfully extracted text from PDF.');
+
+        } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            // --- Existing YouTube Logic (Unchanged) ---
             console.log('Processing YouTube URL...');
             
             try {
@@ -71,11 +87,9 @@ const processContent = async (contentId) => {
                     await execPromise(downloadCommand);
                     console.log('Audio downloaded successfully via yt-dlp.');
                 } catch (downloadError) {
-                    // --- THIS IS THE FIX: Catch the specific anti-bot error ---
                     if (downloadError.stderr && downloadError.stderr.includes('Sign in to confirm')) {
                         throw new Error("YouTube Transcription is down due to YouTube's aggressive anti-bots blocking. Please check back later.");
                     }
-                    // For any other download error, re-throw it
                     throw downloadError;
                 }
 
@@ -91,7 +105,7 @@ const processContent = async (contentId) => {
                 console.log('Successfully transcribed audio using AssemblyAI.');
             }
         } else {
-            // Article Workflow
+            // --- Existing Article Logic (Unchanged) ---
             console.log('Processing article URL...');
             const response = await axios.get(url);
             const html = response.data;
@@ -106,7 +120,9 @@ const processContent = async (contentId) => {
             extractedText = articleBody.text().replace(/\s\s+/g, ' ').trim();
         }
 
-        // --- Step 2: Translation ---
+        // --- All subsequent steps remain unchanged ---
+
+        // Translation
         if (extractedText && extractedText.length > 10) {
             const langCode = franc(extractedText.substring(0, 1000));
             isEnglish = (langCode === 'eng');
@@ -119,10 +135,10 @@ const processContent = async (contentId) => {
             }
         }
 
-        // --- Step 3: Summarization with Groq ---
+        // Summarization with Groq
         if (process.env.ENABLE_SUMMARIZER === 'true' && extractedText && extractedText.length > 200) {
             console.log('Sending text to Groq for summarization...');
-            const safeText = extractedText.substring(0, 7000); // Truncate for safety
+            const safeText = extractedText.substring(0, 7000);
             
             const systemPrompt = `You are an expert summarizer. Create a concise, easy-to-read summary of the following text. The summary should be about 3-4 sentences long.\n\nText:\n${safeText}`;
 
@@ -141,7 +157,7 @@ const processContent = async (contentId) => {
             console.log('Summarization is disabled or text is too short, skipping.');
         }
 
-        // --- Step 4: Final Save & Indexing ---
+        // Final Save & Indexing
         content.title = extractedTitle;
         content.text = extractedText;
         content.summary = finalSummary;
