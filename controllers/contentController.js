@@ -1,69 +1,72 @@
-const asyncHandler = require('express-async-handler')
-const Content = require('../models/contentModel')
+const asyncHandler = require('express-async-handler');
+const Content = require('../models/contentModel');
+const Space = require('../models/spaceModel');
 const { processContent } = require('../services/contentProcessor');
-const Space = require('../models/spaceModel')
 
-// @desc    Create new content
+// @desc    Create new content from URL or File
 // @route   POST /api/content
 // @access  Private
 const createContent = asyncHandler(async (req, res) => {
-  const { url, spaceId, title, summary, tags } = req.body // Expect spaceId now
+  // Multer handles multipart/form-data, so text fields are in req.body
+  const { url, spaceId } = req.body; 
+  const file = req.file; // Multer makes the uploaded file available here
 
-  if (!url || !spaceId) {
-    res.status(400)
-    throw new Error('URL and spaceId are required')
+  if (!spaceId) {
+    res.status(400);
+    throw new Error('spaceId is required');
   }
 
-  // Verify the space exists and belongs to the current user
-  const space = await Space.findById(spaceId)
+  if (!url && !file) {
+    res.status(400);
+    throw new Error('Either a URL or a file is required');
+  }
+
+  // Verify the space exists and belongs to the user
+  const space = await Space.findById(spaceId);
   if (!space || space.user.toString() !== req.user.id) {
-    res.status(404)
-    throw new Error('Space not found or user not authorized')
+    res.status(404);
+    throw new Error('Space not found or user not authorized');
   }
 
-  const content = await Content.create({
+  // If it's a file upload, the 'url' field in the DB will be the original filename
+  const contentData = {
     user: req.user.id,
     space: spaceId,
-    url,
-    title,
-    summary,
-    tags,
-  })
+    url: file ? file.originalname : url, 
+  };
+  
+  const content = await Content.create(contentData);
+  
+  // Kick off background processing, passing the file path if it exists
+  processContent(content._id, file ? file.path : null); 
 
-  // Kick off background processing
-  processContent(content._id);
+  res.status(201).json(content);
+});
 
-  res.status(201).json(content)
-})
+// getUserContent and deleteContent functions remain the same...
 
-// @desc    Get user's content
-// @route   GET /api/content
-// @access  Private
 const getUserContent = asyncHandler(async (req, res) => {
-  const contents = await Content.find({ user: req.user.id }).sort({ createdAt: -1 })
-  res.json(contents)
-})
+    const contents = await Content.find({ user: req.user.id }).sort({ createdAt: -1 })
+    res.json(contents)
+});
 
-// @desc    Delete content
-// @route   DELETE /api/content/:id
-// @access  Private
 const deleteContent = asyncHandler(async (req, res) => {
-  const content = await Content.findById(req.params.id)
+    const content = await Content.findById(req.params.id)
 
-  if (!content) {
-    res.status(404)
-    throw new Error('Content not found')
-  }
+    if (!content) {
+        res.status(404)
+        throw new Error('Content not found')
+    }
 
-  // Ensure user owns the content
-  if (content.user.toString() !== req.user.id) {
-    res.status(401)
-    throw new Error('Not authorized')
-  }
+    if (content.user.toString() !== req.user.id) {
+        res.status(401)
+        throw new Error('Not authorized')
+    }
 
-  await content.deleteOne()
+    await content.deleteOne()
 
-  res.json({ id: req.params.id })
-})
+    res.json({ id: req.params.id })
+});
 
-module.exports = { createContent, getUserContent, deleteContent }
+
+module.exports = { createContent, getUserContent, deleteContent };

@@ -1,6 +1,16 @@
 import React, { useState } from 'react'
 import { ExternalLink, Trash2, Loader2, AlertTriangle, X, Info } from 'lucide-react'
 
+// Helper to check if a string is a valid URL
+const isUrl = (string) => {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
+
 function StatusDot({ status }) {
   const color = status === 'processed' ? 'bg-emerald-500' : status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
   const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'
@@ -13,14 +23,14 @@ function StatusDot({ status }) {
 }
 
 export default function ContentCard({ item, onDelete, isDeleting = false }) {
-  const title = item?.title || (item?.url ? new URL(item.url).hostname : 'Untitled')
+  // --- THIS IS THE FIX: Only parse valid URLs ---
+  const title = item?.title || (isUrl(item?.url) ? new URL(item.url).hostname : item.url || 'Untitled');
+  
   const summary = item?.summary
-  const url = item?.url || item?.sourceUrl
+  const url = item?.url
   const created = item?.createdAt ? new Date(item.createdAt).toLocaleString() : ''
   const hasFailed = item?.status === 'failed';
   const isProcessedWithoutSummary = item?.status === 'processed' && !summary;
-
-  // --- NEW: State to control the visibility of the summary notice ---
   const [showSummaryNotice, setShowSummaryNotice] = useState(true);
 
   return (
@@ -51,7 +61,7 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
             </button>
           </div>
 
-          {url && (
+          {url && isUrl(url) && ( // Only show the link if it's a real URL
             <a 
               href={url} 
               target="_blank" 
@@ -70,7 +80,6 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
             <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{item.failureReason}</span>
         </div>
-      // --- NEW: Dismissible banner for missing summaries ---
       ) : isProcessedWithoutSummary && showSummaryNotice ? (
         <div className="mt-3 text-sm text-blue-300 bg-blue-500/10 p-3 rounded-md flex items-start gap-2">
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -80,7 +89,6 @@ export default function ContentCard({ item, onDelete, isDeleting = false }) {
             </button>
         </div>
       ) : (
-        // Only show the summary if it exists
         summary && <p className="text-sm text-gray-300 mt-3 whitespace-pre-line">{summary}</p>
       )}
 
