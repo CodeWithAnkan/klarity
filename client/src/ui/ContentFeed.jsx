@@ -76,9 +76,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(percentCompleted);
           },
-          // --- THIS IS THE FIX: Increased timeout for file uploads ---
           timeout: 60000, // 60 seconds
-          // --- END OF FIX ---
         });
         setFile(null);
       } else {
@@ -148,6 +146,15 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
                 maxLength={2048} 
               />
             </div>
+            {/* --- THIS IS THE FIX: Added the hidden input and upload button back --- */}
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange}
+                accept=".pdf"
+                className="hidden" 
+                disabled={submitting}
+            />
             <button 
                 type="button" 
                 onClick={() => fileInputRef.current.click()}
@@ -157,6 +164,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             >
                 <UploadCloud className="w-4 h-4" />
             </button>
+            {/* --- END OF FIX --- */}
             <button
               type="button"
               onClick={() => fetchContent(activeSpaceId)}
