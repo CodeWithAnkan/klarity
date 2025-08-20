@@ -10,7 +10,7 @@ const { YoutubeTranscript } = require('youtube-transcript');
 const { franc } = require('franc');
 const { translate } = require('@vitalets/google-translate-api');
 const { AssemblyAI } = require('assemblyai');
-const pdf = require('pdf-parse'); // <-- 1. Import the PDF parsing library
+const pdf = require('pdf-parse');
 
 const Content = require('../models/contentModel');
 const pinecone = require('../config/pinecone');

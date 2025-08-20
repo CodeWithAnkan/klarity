@@ -112,8 +112,8 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             alert('Only PDF files are supported.');
             return;
         }
-        if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
-            alert('File is too large. Maximum size is 10MB.');
+        if (selectedFile.size > 50 * 1024 * 1024) {
+            alert('File is too large. Maximum size is 50MB.');
             return;
         }
         setFile(selectedFile);

@@ -21,17 +21,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- THIS IS THE NEW DEBUGGING STEP ---
 // Add a middleware to log all incoming requests
 app.use((req, res, next) => {
   console.log(`Incoming Request: ${req.method} ${req.path}`);
   next();
 });
-// --- END OF DEBUGGING STEP ---
 
 // Body parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
 // Routes
 app.use('/api/users', require('./routes/userRoutes'));
