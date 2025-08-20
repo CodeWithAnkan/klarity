@@ -76,7 +76,7 @@ export default function ContentFeed({ activeSpaceId, activeSpaceName }) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(percentCompleted);
           },
-          timeout: 60000, // 60 seconds
+          timeout: 180000,
         });
         setFile(null);
       } else {
