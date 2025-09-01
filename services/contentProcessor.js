@@ -146,7 +146,7 @@ const processContent = async (contentId, filePath = null) => {
                 'https://api.groq.com/openai/v1/chat/completions',
                 {
                     messages: [{ role: "system", content: systemPrompt }],
-                    model: "llama3-8b-8192"
+                    model: "openai/gpt-oss-20b"
                 },
                 { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } }
             );
