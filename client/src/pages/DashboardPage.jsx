@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { Resizable } from 're-resizable';
 import api from '../lib/api.js';
 import SpacesSidebar from '../ui/SpacesSidebar.jsx';
 import ContentFeed from '../ui/ContentFeed.jsx';
@@ -16,6 +17,7 @@ export default function DashboardPage({ user, onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [allMessages, setAllMessages] = useState({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [chatWidth, setChatWidth] = useState(448); // Default width 28rem = 448px
   
   // --- NEW: State for the About Modal ---
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -181,16 +183,31 @@ export default function DashboardPage({ user, onLogout }) {
           <ContentFeed activeSpaceId={activeSpaceId} activeSpaceName={activeSpaceName} />
         </main>
 
-        {showChat && (
-          <aside className="w-full sm:w-96 md:w-[28rem] border-l border-gray-800 bg-gray-900/60 overflow-y-auto">
-            <ChatPanel 
-              activeSpaceId={activeSpaceId} 
-              activeSpaceName={activeSpaceName}
-              messages={allMessages[activeSpaceId] || []}
-              onSendMessage={handleSendMessage}
-            />
-          </aside>
-        )}
+        <Resizable
+  size={{ width: showChat ? chatWidth : 0, height: '100%' }}
+  minWidth={showChat ? 320 : 0}
+  maxWidth={showChat ? 800 : 0}
+  onResizeStop={(e, direction, ref) => {
+    setChatWidth(parseInt(ref.style.width, 10)); // update only when drag stops
+  }}
+  enable={{ left: true }}
+  className="transition-all duration-300 ease-in-out bg-gray-900/60"
+  handleClasses={{ left: "w-2 h-full cursor-col-resize" }}
+  style={{
+    visibility: showChat ? 'visible' : 'hidden',
+    borderLeft: showChat ? '1px solid rgb(55 65 81 / 1)' : 'none', // border-gray-800
+  }}
+>
+  <div className="h-full overflow-y-auto">
+    <ChatPanel 
+      activeSpaceId={activeSpaceId} 
+      activeSpaceName={activeSpaceName}
+      messages={allMessages[activeSpaceId] || []}
+      onSendMessage={handleSendMessage}
+    />
+  </div>
+</Resizable>
+
       </div>
       <Footer />
 
