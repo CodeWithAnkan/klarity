@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
+import NotFoundPage from './pages/NotFoundPage.jsx'
 
 export default function App() {
   const [view, setView] = useState('login');
@@ -37,15 +38,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
-      {view === 'login' && (
-        <LoginPage onSwitchToRegister={() => setView('register')} onAuthed={handleAuthed} />
-      )}
-      {view === 'register' && (
-        <RegisterPage onSwitchToLogin={() => setView('login')} onAuthed={handleAuthed} />
-      )}
-      {view === 'dashboard' && (
-        <DashboardPage user={user} onLogout={handleLogout} />
-      )}
+      {(() => {
+        if (view === 'login') {
+          return <LoginPage onSwitchToRegister={() => setView('register')} onAuthed={handleAuthed} />;
+        }
+        if (view === 'register') {
+          return <RegisterPage onSwitchToLogin={() => setView('login')} onAuthed={handleAuthed} />;
+        }
+        if (view === 'dashboard' && user) {
+          return <DashboardPage user={user} onLogout={handleLogout} />;
+        }
+        return <NotFoundPage />;
+      })()}
     </div>
   )
 }
