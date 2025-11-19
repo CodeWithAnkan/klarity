@@ -36,10 +36,12 @@ function AppContent() {
   };
 
   const handleSwitchToRegister = () => {
+    console.log('Switching to register page');
     navigate('/register');
   };
 
   const handleSwitchToLogin = () => {
+    console.log('Switching to login page');
     navigate('/login');
   };
 
