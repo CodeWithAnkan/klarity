@@ -3,6 +3,7 @@ import api from '../lib/api'
 import { UserPlus, Loader2, ArrowRight } from 'lucide-react'
 
 export default function RegisterPage({ onSwitchToLogin, onAuthed }) {
+  console.log('RegisterPage props:', { onSwitchToLogin, onAuthed });
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -85,7 +86,10 @@ export default function RegisterPage({ onSwitchToLogin, onAuthed }) {
 
         <div className="mt-6 text-sm text-gray-400">
           Already have an account?{' '}
-          <button onClick={onSwitchToLogin} className="text-emerald-400 hover:underline">Sign in</button>
+          <button onClick={() => {
+            console.log('Sign in button clicked, onSwitchToLogin:', onSwitchToLogin);
+            if (onSwitchToLogin) onSwitchToLogin();
+          }} className="text-emerald-400 hover:underline">Sign in</button>
         </div>
       </div>
     </div>
